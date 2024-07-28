@@ -12,6 +12,12 @@ const config = {
   footer: {
     text: 'Omnilane Docs',
   },
+  useNextSeoProps: () => {
+    return {
+      titleTemplate: "Omnilane Docs - %s",
+      descriptionTemplate: "%s"
+    };
+  },
 }
 
 export default config
