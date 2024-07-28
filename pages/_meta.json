@@ -1,15 +1,34 @@
 {
-  "index": "Introduction",
-  "another": "Another Page",
-  "advanced": "Advanced (A Folder)",
   "about": {
-    "title": "About",
-    "type": "page"
+    "title": "Website ↗",
+    "type": "page",
+    "href": "https://omnilane.xyz",
+    "newWindow": true
   },
   "contact": {
-    "title": "Contact ↗",
+    "title": "X(Twitter) ↗",
     "type": "page",
-    "href": "https://twitter.com/shuding_",
+    "href": "https://twitter.com/omnilane_labs",
     "newWindow": true
-  }
+  },
+  "--- separator1": {
+    "title": "Introduction",
+    "type": "separator"
+  },
+  "introduction": "Welcome",
+  "--- separator2": {
+    "title": "",
+    "type": "separator"
+  },
+  "protocol-overview": "Protocol Overview",
+  "--- separator3": {
+    "title": "",
+    "type": "separator"
+  },
+  "getting-started": "Getting Started",
+  "--- separator4": {
+    "title": "",
+    "type": "separator"
+  },
+  "learn-more": "Learn More"
 }

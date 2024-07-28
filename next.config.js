@@ -3,4 +3,16 @@ const withNextra = require('nextra')({
   themeConfig: './theme.config.js',
 })
 
-module.exports = withNextra()
+
+module.exports = {
+  ...withNextra(),
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/introduction/what-is',
+        permanent: true,
+      },
+    ]
+  }
+}
