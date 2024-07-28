@@ -1,4 +1,6 @@
 {
+  "team": "Team",
+  "blog": "Blog",
   "faq": "F.A.Q",
   "security": "Security"
 }

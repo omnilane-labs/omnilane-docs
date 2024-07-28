@@ -1,3 +1,4 @@
+
 const withNextra = require('nextra')({
   theme: 'nextra-theme-docs',
   themeConfig: './theme.config.js',
@@ -11,7 +12,7 @@ module.exports = {
       {
         source: '/',
         destination: '/introduction/what-is',
-        permanent: true,
+        permanent:true
       },
     ]
   }
