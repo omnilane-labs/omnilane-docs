@@ -1,6 +1,8 @@
 {
-  "team": "Team",
-  "blog": "Blog",
-  "faq": "F.A.Q",
-  "security": "Security"
+  "blog": {
+    "title": "Blog ↗",
+    "type": "page",
+    "href": "https://blog.omnilane.xyz/posts",
+    "newWindow": true
+  }
 }

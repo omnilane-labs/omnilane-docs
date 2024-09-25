@@ -1,0 +1,22 @@
+# Fee Structure
+
+Below the list of fees involved in Omnilane
+
+- **Base Taker Fee:** A percentage amount charged to the user in outbound tokens deducted when releasing the funds from the user. (Defined by Omnilane)
+- **Base Maker Fee:** A percentage amount charged to the filler in outbound tokens, deducted when releasing the funds from the user. (Defined by Omnilane)
+- **Relayer Fee:** A fixed amount (usually 3x the cost of the transaction to release funds on destination chain), charged in outbound tokens, and deducted when releasing the funds from the user. (Bidded between relayers)
+
+- **Vendor Fee:** A percentage amount charged to the user, **on top** of the `base_taker_fee` in outbound tokens deducted when releasing the funds from the user. (Defined by any app integrating Omnilane)
+
+- **Protocol Fee:** Defined as `taker_fee + maker_fee`.
+
+- **Partner Fee:** A percentage of `protocol_fee`. (Reach out to become a partner!)
+
+## Initial Values
+
+### Fixed Values
+| **Fee**                     | **Value** |
+|-----------------------------|-----------|
+| **Base Taker Fee**          | 20 BPS    |
+| **Base Maker Fee**          | 0  BPS    |
+| **Partner Fee**             | First 5 get 50% of protocol revenue |

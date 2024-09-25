@@ -1,39 +1,29 @@
 # Protocol Overview
 
+Omnilane is an [intent-based](https://blog.uniswap.org/uniswap-labs-and-across-propose-standard-for-cross-chain-intents) decentralized cross-chain swap protocol that enables the seamless exchange of native digital assets across multiple blockchain networks.
+Below, an overview of how Omnilane works and the different components that make it possible.
+
 ## System Overview
 
-Omnilane is a decentralized cross-chain swap protocol that enables the seamless exchange of native digital assets across multiple blockchain networks. Below is an overview of the system architecture and key components that make Omnilane a unique and powerful platform for cross-chain trading.
+**Chain Signatures Technology**
 
-### Core Components
+Omnilane leverages [Chain Signatures](https://docs.near.org/build/chain-abstraction/chain-signatures), a built-in MPC network on the NEAR blockchain that allow NEAR smart-contracts to derive private keys and sign transactions using different cryptographic curves.
 
-1. **Chain Signatures Technology**
-   - **Overview**: Omnilane leverages Chain Signatures technology, a cutting-edge solution on the NEAR blockchain, to facilitate secure and efficient cross-chain transactions. This technology allows NEAR smart contracts to sign and execute transactions on other blockchains, eliminating the need for wrapped assets or intermediaries.
-   - **Functionality**: By using a Multi-Party Computation (MPC) network, Chain Signatures ensures that the private keys required to authorize transactions are never held by a single party, enhancing security and decentralization.
+**NEAR as Ledger Layer**
 
-2. **Decentralized Settlement Layer**
-   - **NEAR Blockchain**: Omnilane uses the NEAR blockchain as its settlement layer, leveraging its fast and scalable infrastructure to process transactions. NEAR's sharding technology enables high throughput and low latency, making it ideal for handling the demands of cross-chain swaps.
-   - **Smart Contracts**: The protocol's smart contracts are deployed on NEAR, where they manage the logic for executing swaps, handling fees, and ensuring that transactions are completed as intended.
+Omnilane ledger smart-contracts live on the NEAR blockchain, using it as its settlement layer for its fast blocktime, its efficiency in transaction costs and scalable infrastructure to process transactions. NEAR's sharding technology enables high throughput and low latency, making it ideal for handling the demands of cross-chain swaps.
+The main protocol's smart contracts are deployed on NEAR, where we execute the logic for executing swaps, handling fees, and ensuring that transactions are completed as intended.
 
-3. **Request for Quote (RFQ) Model**
-   - **Mechanism**: Omnilane employs an RFQ model to facilitate trades. In this system, liquidity providers offer quotes for asset swaps, and users can choose the best available rate. This model provides transparency and price certainty, protecting users from Miner Extractable Value (MEV) attacks and slippage.
-   - **Benefits**: The RFQ model allows for efficient price discovery and competitive rates, ensuring users receive fair value for their trades.
+This doesn't necessarily mean users need to interact with NEAR. Transactions are sponsored by Omnilane as the default relayer, allowing for a seamless experience.
 
-4. **Cross-Chain Interoperability**
-   - **Chain Agnostic**: Omnilane is designed to be compatible with a wide range of blockchain networks, including Bitcoin (BTC), Ethereum (ETH), Solana (SOL), and others. This chain-agnostic approach enables users to swap assets across different ecosystems seamlessly.
-   - **Native Asset Swaps**: Unlike many cross-chain solutions that rely on wrapped tokens, Omnilane enables the direct exchange of native assets. This reduces complexity and enhances security by avoiding the risks associated with synthetic assets.
+**Intent-Based Limit Orders**
 
-5. **Minimalistic Infrastructure**
-   - **Cost Efficiency**: Omnilane's infrastructure is designed to be lightweight and efficient, resulting in lower operational costs. This efficiency translates into lower fees for users, making it one of the most cost-effective solutions for cross-chain trading.
-   - **Scalability**: The protocol's minimalistic design ensures that it can scale effectively as the volume of transactions grows, maintaining performance and reliability.
+Omnilane only needs to deploy a smart-contract on new blockchains to integrate. These smart-contracts will accept deposits to create new swap orders from users. 
 
-### Security Features
+Along with the deposit, users provide _**witness of counterparty cumulative liquidity**_, which later works as proof to settle the trade without requiring any further action from the user.
 
-- **Decentralization**: By leveraging decentralized technologies, Omnilane minimizes reliance on any single entity, reducing the risk of central points of failure.
-- **Audits and Transparency**: Regular security audits and transparent operations ensure that the protocol remains secure and trustworthy for users.
+**Cumulative State Consensus**
 
-### User Experience
+The Cumulative State Consensus, is a peer-to-peer consensus of the cumulative deposits made by a trade counterparty. This is provided by users creating new orders along with their deposit. Because all liabilities are tracked on the Ledger Layer, having the acknowledgment from the user of the cumulative liquidity deposited by their chosen counterparties allows for the NEAR smart-contracts to determine whether the trade can take place or not (if the counterparty is solvent for settling the trade securely.)
 
-- **Ease of Use**: Omnilane is designed with the user in mind, offering a simple and intuitive interface for executing cross-chain swaps. Users can connect their wallets and start trading with minimal setup.
-- **Support and Community**: A dedicated support team and active community channels are available to assist users and provide information.
-
-Omnilane's system architecture combines innovative technology, robust security, and user-centric design to create a powerful platform for decentralized cross-chain trading. Our commitment to continuous improvement ensures that Omnilane remains at the forefront of the cross-chain swap ecosystem.
+Please note that this makes it possible for Omnilane to operate without oracles, sidechains, or bridges, allowing us to scale quickly.
