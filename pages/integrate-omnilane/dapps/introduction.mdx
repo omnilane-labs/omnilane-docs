@@ -1,18 +1,41 @@
 # Getting Started
+Omnilane is a peer-to-peer cross-chain liquidity protocol that operates without the need for oracles, sidechains, or bridges. It allows users to swap tokens across different blockchains in a fully decentralized manner, without intermediaries. This results in a system that is significantly more capital-efficient and faster than traditional solutions.
 
-## Integrate Omnilane
+Omnilane utilizes an [intent-based](https://blog.uniswap.org/uniswap-labs-and-across-propose-standard-for-cross-chain-intents) model, combined with [decentralized MPC technology](https://docs.near.org/build/chain-abstraction/chain-signatures) built into the NEAR blockchain.
 
-Integrating Omnilane into your application, DEX, wallet, or any other platform can significantly enhance its functionality by adding robust cross-chain features. Whether you aim to offer seamless cross-chain swaps or utilize Omnilane as a bridge, integrating our protocol provides both technological and financial benefits.
+### Cumulative State Consensus
+The core functionality of Omnilane revolves around a propietary algorithm called ***Cumulative State Consensus***. It works with users creating limit orders by depositing their origin assets into a Vault on the originating chain. These Vaults are monitored by liquidity providers, who can fulfill the order by releasing the corresponding funds on the destination chain. Afterward, they can claim the assets deposited in the Vault on the origin chain.
 
-### Integration Benefits
+When a user creates a limit order, they must witness *cumulative deposits* of liquidity providers on the destination chain. This step is crucial to maintaining the trustless nature of the protocol. By verifying the liquidity provider's cumulative deposits, the user ensures that there are sufficient funds to fulfill the order. If the user submits an incorrect verification (witness) value, Omnilane cannot guarantee solvency, which could allow a liquidity provider to claim the origin assets without releasing the destination assets, undermining the integrity of the transaction.
 
-1. **Enhanced Cross-Chain Capabilities**
-   - **Seamless Cross-Chain Swaps**: By integrating Omnilane, you can offer your users the ability to swap assets across multiple blockchains natively, without the need for wrapped tokens. This enhances the usability and attractiveness of your platform.
-   - **Bridge Functionality**: Use Omnilane to bridge assets between different blockchains, facilitating a wider range of financial operations and connectivity within your ecosystem.
+## Smart Contracts
+Omnilane operates primarily through two types of smart contracts: [*Vaults*](/integrate-omnilane/dapps/smart-contracts/vaults) and [*Core*](/integrate-omnilane/dapps/smart-contracts/core).
 
-2. **Passive Income Opportunities**
-   - **Revenue Sharing**: Partners who integrate Omnilane can earn passive income through a share of the protocol's revenue. This is a straightforward way to monetize your platform’s traffic and enhance its financial sustainability.
-   - **Markup Trading Fees**: In addition to the standard fees, you can set markup trading fees. These additional fees are fully allocated to you, providing an extra stream of income from the trades conducted through your platform.
+You can find the addresses for all contracts on the [Smart Contracts](/integrate-omnilane/dapps/smart-contracts/addresses) page.
 
+### Vaults
+*Vaults* are smart contracts deployed on each blockchain supported by Omnilane. The system can even support blockchains that don't have native smart contract functionality, such as Bitcoin. *Vaults* are used to accept token deposits from liquidity providers and process new limit orders from users wanting to swap tokens. They also handle withdrawals for liquidity providers and allow users to claim tokens after a swap, but this process requires a signature verification from the central *Core* contract.
 
+As an integrator, your applications will require interacting with the *Vaults* for depositing funds to create new orders and for cancelling orders. 
+
+You can opt not to interact with the *Vaults* to release funds on the destination chain by using the [Relayer](/integrate-omnilane/dapps/relayers) service. However, if your integration requires more control, you can interact with the *Vaults* directly. Find more information on the [Vaults](/integrate-omnilane/dapps/smart-contracts/vaults) page.
+
+### Core
+The *Core* contract is Omnilane’s central contract, deployed on the NEAR blockchain. It acts as the settlement layer and ledger for users interacting with Omnilane. NEAR was chosen for its low transaction costs, high speed and the flexibility of their VM.
+
+The *Core* contract also enforces protocol fees, which are detailed on the [Fee Structure](/integrate-omnilane/fee-structure) page.
+
+As an integrator, you can opt not to interact with the *Core* by using the [Relayer](/integrate-omnilane/dapps/relayers) service. However, if your integration requires more control, you can interact with the *Core* directly. Find more information on the [Core](/integrate-omnilane/dapps/smart-contracts/core) page.
+
+## Broker
+All information related to Omnilane is public and decentralized. However, to streamline the integration process, Omnilane provides a public broker service that offers market data and connects users with the liquidity layer, providing reference prices and more. We encourage integrators to validate the data provided by the broker independently.
+
+## Relayers
+Any user can send transactions directly to the Omnilane protocol. This option is useful for developers who want faster integrations, prioritize their transactions, or customize transaction logic within their applications.
+
+For applications where this level of control is not critical, Omnilane offers a relayer service that handles transaction submissions on both the NEAR blockchain and the destination blockchains.
+
+Relayers operate across all blockchains supported by Omnilane.
+
+Additionally, anyone can become a relayer. If you’re interested in becoming one, contact Omnilane for more information.
 

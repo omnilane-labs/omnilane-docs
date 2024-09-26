@@ -1,0 +1,70 @@
+# Broker
+
+All information related to Omnilane is public and decentralized. However, to streamline the integration process, Omnilane provides a public broker service that offers market data and connects users with the liquidity layer, providing reference prices and more. We encourage integrators to validate the data provided by the broker independently.
+
+## Broker API
+The description of the broker API can be found [here](https://api-dev.omnilane.xyz/docs)
+
+## Broker URL
+
+| **Environment**                     | **URL** |
+|-----------------------------|-----------|
+| **Development**             | https://api-dev.omnilane.xyz/docs    |
+| **Production**              | Available from December '24 |
+
+
+## Quotes
+
+Users can request “quotes” from the Broker, and use this information to create a valid Order.
+
+An example response:
+
+```json
+{
+  "amountIn": "10000000",
+  "broadcastFee": "2213090",
+  "fromAsset": {
+    "id": "USDT",
+    "chainId": 31337,
+    "decimals": 6,
+    "contractAddress": "0xa7465d0d78d81bd8a51b47b2cdfc6bdff474db47",
+    "vaultContractAddress": "0x260bd0d51347ddc044bbe2dbc5dd69deae604c08"
+  },
+  "toAsset": {
+    "id": "USDT",
+    "chainId": 31337,
+    "decimals": 6,
+    "contractAddress": "0xa7465d0d78d81bd8a51b47b2cdfc6bdff474db47",
+    "vaultContractAddress": "0x260bd0d51347ddc044bbe2dbc5dd69deae604c08"
+  },
+  "partnerId": ,
+  "vendorId": "0xE461854843c94ABE339fcE751eB59c1658b8C821",
+  "vendorFeeBps": 5,
+  "witnessedCumulatives": [
+    {
+      "marketMaker": "0x1ca6947022d54f3a55bd465101e3bf7fc3dd0db3",
+      "witness": "10000000000"
+    },
+    {
+      "marketMaker": "0xab926fe0c90bb4a761feda2c93bb44f2517684e6",
+      "witness": "10000000000"
+    }
+  ],
+  "quotes": [
+    {
+      "amountOut": "10000000"
+    },
+    {
+      "amountOut": "10000000"
+    }
+  ]
+}
+```
+
+The broker provides information that is already compliant with the order structure of Omnilane protocol, and provides recommendations for:
+
+- `broadcastFee`: This is the value that is proposed to a relayer to broadcast the transaction to the destination network. It is calculated based on gas consumption, current gas price, and the price of the received token against the native token used to pay for the gas. This amount is deducted from the receiving token.
+
+- `quotes`: An array of offers provided by market makers for this specific swap, representing their expected `amountOut` to complete this order. These values can be used as guidance for defining `minAmountOut`, for example calculating the median value of the array.
+
+- `witnessedCumulatives`: The Broker fetches on-chain information from vaults to provide the current cumulative values for each market maker on the receiver chain and token.

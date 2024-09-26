@@ -1,0 +1,18 @@
+# Relayer
+
+Since Omnilane is a decentralized infrastructure, and all smart-contracts are public, anyone can send transactions directly to the Omnilane protocol. This option is useful for developers who want more control in their integrations, prioritize their transactions, or customize transaction logic within their applications.
+
+For applications where this level of control is not critical, Omnilane offers a relayer service that handles transaction submissions on both the NEAR blockchain and the destination blockchains.
+
+Relayers operate across all blockchains supported by Omnilane.
+
+Additionally, anyone can become a relayer. If you’re interested in becoming one, contact Omnilane for more information.
+
+## Relayer Service
+
+**Relay NEAR Transaction:** Once a new order is deposited, Omnilane will connect the user with a liquidity provider to fulfill the order. This is done by calling a smart-contract on NEAR including the signature from liquidity providers that will release the funds on the destination chain. By default, this is done by the Omnilane relayer service.
+
+**Relay Release of Funds:** By default, once the order is fulfilled, the relayer will then broadcast a transaction to the destination chain to release the funds to the user automatically.
+
+## Retrying Transactions
+If a transaction fails, the retryal logic must be implemented by the integrator. The relayer service does not automatically retry transactions.

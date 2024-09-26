@@ -1,0 +1,270 @@
+# Vaults
+
+*Vaults* are smart contracts deployed on each blockchain supported by Omnilane. The system can even support blockchains that don't have native smart contract functionality, such as Bitcoin. *Vaults* are used to accept token deposits from liquidity providers and process new limit orders from users wanting to swap tokens. They also handle withdrawals for liquidity providers and allow users to claim tokens after a swap, but this process requires a signature verification from the central *Core* contract.
+
+Below some of the methods that the *Vaults* smart contracts expose:
+
+## Add Liquidity
+
+For users to be able to trade in Omnilane, it is required for the liquidity providers (LPs) to deposit liquidity into the receiving vault of each blockchain.
+
+LPs add liquidity to the vault by calling the following method (note that for ERC20 tokens an approval step is required prior to this call):
+
+```solidity
+function addLiquidity(
+	uint256 amount,
+	address token,
+	address to
+) external payable
+```
+
+The deposit will be added to the LP vault, and will increase its `cumulative` for this token.AddressAddress
+
+The `cumulative` value is the all-time cumulative amount deposited for this LP and token address. It is later used by the user to provide a `witness` of this value, fueling the Omnilane consensus mechanism.
+
+The cumulative for a specific LP and token can be retrieved from the contract using the public getter function
+
+```solidity
+cumulativeLiquidity(address marketMaker, address token)
+```
+
+These methods will validate that the signature (v, r, s) is correct for the sent params. The signature, as being compliant with EIP-712, also includes other components inside it, like `chainId`, `verifying contract address`, etc, that prevent it from being misused.
+
+The `v` value of the signature should be in the range 27/28, meaning that for signatures returning v as 0/1 it's necessary to add 27 to it.
+
+
+
+## Post Orders
+
+A trade on Omnilane Protocol starts by depositing on the origin chain. On Evm chains, the order can be posted by calling the `postOrder` method (note that for ERC20 tokens an approval step is required prior to this call):
+
+```solidity
+function postOrder(
+	OrderParams calldata params,
+	bytes32 requestId,
+	address fromAddress,
+	address token
+) external payable returns (bytes32 orderId, uint256 timestamp)
+```
+
+- `token` is the address codified version of the token address in `fromAsset`, required only to simplify conversion and verification, `address(0)` for native.
+- `fromAddress` is the address that holds control of the pending order, and the one receiving the funds in case of a cancellation or refund.
+- `requestId` is the sha256 hash of the abi encoded params, and is used by the protocol to verify the integrity of the order:
+    
+    ```solidity
+    sha256(abi.encode(params))
+    ```
+    
+
+The `requestId` can be obtained from the contract by calling the view method:
+
+```solidity
+function validateOrder(
+	OrderParams calldata params,
+	address token
+) public view returns (bytes32 requestId)
+```
+
+When an order is created, it will be initialized in a LOCKED state, and the received funds of this order will be only locked inside the order, it is not stored in any vault or mapping for accounting. To retrieve the funds, it needs to be WITHDRAWN to refund them to the user, or UNLOCKED for it to be delivered to the order counterpart.
+
+Validations:
+
+This contract does not run a full validation of the order, full validation is only conducted in the Main NEAR Contract. This means that an order with a wrong `requestId` will still be accepted by this contract, but it will be impossible to settle it, requiring a withdraw/cancel to retrieve the funds.
+
+A valid order can be obtained from a [Broker](/integrate-omnilane/dapps/broker).
+
+The contract only runs the following validations:
+
+- OrderId didn’t exist already in storage
+- `token` matches ints string counterpart in `fromAsset`
+- Amounts higher than zero
+- All `fromAsset` params:
+    - chainId
+    - vaultContractAddress == this
+    - decimals == on-chain value (this also validates token is an IERC20Metadata)
+
+### OrderParams
+
+```solidity
+struct OrderParams {
+    uint256 amountIn;
+    uint256 minAmountOut;
+    uint256 broadcastFee;
+    Asset fromAsset;
+    Asset toAsset;
+    string toAddress;
+    Witness[] witnessedCumulatives;
+    address partnerId;
+    address vendorId;
+    uint32 vendorFeeBps;
+    address exclusiveFiller;
+    uint64 exclusivityDurationSecs;
+    bytes message;
+}
+
+```
+
+| `amountIn` | `uint256` | The amount of tokens to be received by this contract when posting the order |
+| --- | --- | --- |
+| `minAmountOut` | `uint256` | The minimum amount of tokens to be sent to the receiver |
+| `broadcastFee` | `uint256` | The fee, in receiving token units, the user is willing to pay to a relayer for the transaction broadcast in the destination chain. It should be enough to cover gas costs and any other risks. It will be deducted from the amount received in destination chain. |
+| `fromAsset` | `Asset` | The details of the asset to be sent to this contract |
+| `toAsset` | `Asset` | The details of the asset to be sent to the receiver |
+| `toAddress` | `string` | The address of the receiver, as a lowercase hex string |
+| `witnessedCumulatives` | `Witness[]` | An array of witnesses, that contains a witness value for each possible market maker |
+| `partnerId` | `address` | The identity of the partner (as an EVM address). When this is a non-zero address, the protocol fee will be shared with this partner according to the fee configuration in Omnilane Core. Only whitelisted partners are allowed (or zero address). |
+| `vendorId` | `address` | The identity of the vendor (as an EVM address). That will receive the vendor fee. |
+| `vendorFeeBps` | `uint32` | The fee to send to the vendor, in basis points (1/100 of a percent). |
+| `exclusiveFiller` | `address` | The address of the exclusive filler, if any (zero address if not exclusive). |
+| `exclusivityDurationSecs` | `uint64` | The duration of the exclusivity in seconds. |
+| `message` | `bytes` | The message (abi encoded) to send to the receiver contract, if empty, no contract call will be made |
+
+```solidity
+struct Asset {
+    uint32 chainId;
+    uint32 decimals;
+    string contractAddress;
+    string vaultContractAddress;
+}
+
+```
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `chainId` | `uint32` |  |
+| `decimals` | `uint32` |  |
+| `contractAddress` | `string` | The address of the token contract, as a lowercase hex string. Native tokens are represented by the zero address (”0x0” for strings) |
+| `vaultContractAddress` | `string` |  |
+
+```solidity
+struct Witness {
+    string marketMaker;
+    string witness;
+}
+
+```
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `marketMaker` | `string` | The address of the market maker, as a lowercase hex string |
+| `witness` | `string` |  |
+
+### OrderId
+
+The `orderId` is the unique identifier of this order across the protocol and is calculated as follows:
+
+```solidity
+sha256(abi.encode(requestId, timestamp, fromAddress))
+```
+
+Note that `requestId` is not enforced to be unique, the same `requestId` posted twice will have a different timestamp, resulting in two unique `OrderId`
+
+
+## Withdraw/Cancel Order
+
+Cancel an order and retrieve the funds:
+
+```solidity
+function withdrawOrder(
+	bytes32 orderId,
+	address to,
+	uint8 v, bytes32 r, bytes32 s)
+```
+
+The Contract will only check that the order exists and it’s in a LOCKED state, and will proceed to change its state to WITHDRAWN and transfer the original `amountIn` to the `to` address.
+
+Note that there are no validations on this side, so invalid orders can still be withdrawn.
+
+## Unlock Order
+
+Unlocks an order, releasing the funds for the maker of the executed order. 
+
+```solidity
+function unlockOrder(
+	bytes32 orderId,
+	address marketMaker,
+	uint256 makerFee,
+	uint8 v, bytes32 r, bytes32 s
+) public returns (bool)
+```
+
+Upon unlocking the funds will be directly deposited into the Market Makers vault, adding liquidity and increasing its total cumulative deposit (in the same manner as when the market makers add liquidity)
+
+If `makerFee` is greater than zero, this amount will be subtracted from the released amount of the order and collected in the `protocolFeeVault`. The remaining amount is then deposited as liquidity for the market maker. `makerFee` should be zero in case of rebate (the rebate is computed on the claim amount).
+
+## Claim Order
+
+Claims an order after it was successfully settled:
+
+```solidity
+function claimOrder(
+	ClaimOrderParams calldata params,
+	int256 makerFee,
+	uint8 v, bytes32 r, bytes32 s
+) external
+```
+
+Takes the funds out of the market maker vault and distributes them according to the claim params:
+
+```solidity
+struct ClaimOrderParams {
+    bytes32 orderId;
+    uint256 witnessedCumulativeLiquidity;
+    uint256 amount;
+    uint256 broadcastFee;
+    uint256 protocolFee;
+    uint256 vendorFee;
+    address vendorId;
+    uint256 partnerFee;
+    address partnerId;
+    address marketMaker;
+    address token;
+    address to;
+    bytes message;
+}
+```
+
+| `orderId` | `bytes32` | The ID of the order to claim |
+| --- | --- | --- |
+| `witnessedCumulativeLiquidity` | `uint256` | The cumulative amount of the market maker at the time of the request (should be equal or greater than the current cumulative) |
+| `amount` | `uint256` | The amount to claim from the market maker's vault. In the case there was a negative makerFee (rebate), the rebate should have already been discounted in the amount. |
+| `broadcastFee` | `uint256` | The fee to send to the relayer (msg.sender), deducted from the amount |
+| `protocolFee` | `uint256` | The fee to send to the protocol, deducted from the amount |
+| `vendorFee` | `uint256` | The fee to send to the vendor, deducted from the amount |
+| `vendorId` | `address` | The identity of the vendor (as an EVM address) |
+| `partnerFee` | `uint256` | The fee to send to the partner, should have already been deducted from the protocol fee |
+| `partnerId` | `address` | The identity of the partner (as an EVM address) |
+| `marketMaker` | `address` | The identity of the market maker (as an EVM address), from with amount will be deducted |
+| `token` | `address` | The address of the token to claim the order for (0x0 for ETH) |
+| `to` | `address` | The address to send the funds to |
+| `message` | `bytes` | The message (abi encoded) to send to the receiver contract, if empty, no contract call will be made |
+
+
+Validations:
+
+- Orders are marked as claimed (and verified if not claimed before)
+- `witnessedCumulativeLiquidity` should be equal to or lower than the real cumulative deposited in this contract for this market maker and token. An invalid cumulative will prevent the order from being claimed until the real cumulative of the market maker becomes higher.
+
+## Same-Chain Swaps
+
+If the inbound order is present in the same contract, meaning a same-chain swap, the contract will also unlock the order and release the funds for the market maker as described in [Unlock Order.](https://www.notion.so/Omnilane-Core-Methods-5b6d7534d57c45f1a209286a35bbd0b4?pvs=21) This allows to have instant unlocking of the order.
+
+## Remove Liquidity
+
+To keep users secure and have a trustworthy accounting of the funds deposited in the vaults, market makers need to request the removal of liquidity to the Omnilane Core, and call the following method:
+
+```solidity
+ function removeLiquidity(
+      uint256 witnessedCumulativeLiquidity,
+      uint256 amount,
+      address marketMaker,
+      address token,
+      address to,
+      uint8 v, bytes32 r, bytes32 s
+  ) external
+```
+
+Note that the removal of liquidity also requires a valid `witnessedCumulativeLiquidity`, this helps Omnilane Core to ensure the consensus mechanism is maintained. `witnessedCumulativeLiquidity` should be equal to or lower than the real cumulative deposited in this contract for this market maker and token. An invalid cumulative will prevent the removal until the real cumulative of the market maker becomes higher.
+
+After validation, the contract will transfer the corresponding funds to the `to` address.
+
