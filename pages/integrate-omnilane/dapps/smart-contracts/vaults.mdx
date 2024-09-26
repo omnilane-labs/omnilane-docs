@@ -2,7 +2,7 @@
 
 *Vaults* are smart contracts deployed on each blockchain supported by Omnilane. The system can even support blockchains that don't have native smart contract functionality, such as Bitcoin. *Vaults* are used to accept token deposits from liquidity providers and process new limit orders from users wanting to swap tokens. They also handle withdrawals for liquidity providers and allow users to claim tokens after a swap, but this process requires a signature verification from the central *Core* contract.
 
-Below some of the methods that the *Vaults* smart contracts expose:
+Below some of the methods that the ***Vaults*** smart contracts expose
 
 ## Add Liquidity
 
@@ -18,9 +18,9 @@ function addLiquidity(
 ) external payable
 ```
 
-The deposit will be added to the LP vault, and will increase its `cumulative` for this token.AddressAddress
+The deposit will be added to the LP vault, and will increase its `cumulative` deposit value.
 
-The `cumulative` value is the all-time cumulative amount deposited for this LP and token address. It is later used by the user to provide a `witness` of this value, fueling the Omnilane consensus mechanism.
+The `cumulative` value is the all-time cumulative amount deposited for this LP and token address. It is later used by the user to provide a `witness` of this value, fueling the Omnilane `Cumulative State Consensus` mechanism.
 
 The cumulative for a specific LP and token can be retrieved from the contract using the public getter function
 
@@ -29,9 +29,6 @@ cumulativeLiquidity(address marketMaker, address token)
 ```
 
 These methods will validate that the signature (v, r, s) is correct for the sent params. The signature, as being compliant with EIP-712, also includes other components inside it, like `chainId`, `verifying contract address`, etc, that prevent it from being misused.
-
-The `v` value of the signature should be in the range 27/28, meaning that for signatures returning v as 0/1 it's necessary to add 27 to it.
-
 
 
 ## Post Orders
@@ -104,8 +101,9 @@ struct OrderParams {
 
 ```
 
-| `amountIn` | `uint256` | The amount of tokens to be received by this contract when posting the order |
+| Parameter | Type | Description |
 | --- | --- | --- |
+| `amountIn` | `uint256` | The amount of tokens to be received by this contract when posting the order |
 | `minAmountOut` | `uint256` | The minimum amount of tokens to be sent to the receiver |
 | `broadcastFee` | `uint256` | The fee, in receiving token units, the user is willing to pay to a relayer for the transaction broadcast in the destination chain. It should be enough to cover gas costs and any other risks. It will be deducted from the amount received in destination chain. |
 | `fromAsset` | `Asset` | The details of the asset to be sent to this contract |
@@ -129,7 +127,7 @@ struct Asset {
 
 ```
 
-| Name | Type | Description |
+| Parameter | Type | Description |
 | --- | --- | --- |
 | `chainId` | `uint32` |  |
 | `decimals` | `uint32` |  |
@@ -144,7 +142,7 @@ struct Witness {
 
 ```
 
-| Name | Type | Description |
+| Parameter | Type | Description |
 | --- | --- | --- |
 | `marketMaker` | `string` | The address of the market maker, as a lowercase hex string |
 | `witness` | `string` |  |
@@ -223,9 +221,9 @@ struct ClaimOrderParams {
     bytes message;
 }
 ```
-
-| `orderId` | `bytes32` | The ID of the order to claim |
+| Parameter | Type | Description |
 | --- | --- | --- |
+| `orderId` | `bytes32` | The ID of the order to claim |
 | `witnessedCumulativeLiquidity` | `uint256` | The cumulative amount of the market maker at the time of the request (should be equal or greater than the current cumulative) |
 | `amount` | `uint256` | The amount to claim from the market maker's vault. In the case there was a negative makerFee (rebate), the rebate should have already been discounted in the amount. |
 | `broadcastFee` | `uint256` | The fee to send to the relayer (msg.sender), deducted from the amount |
