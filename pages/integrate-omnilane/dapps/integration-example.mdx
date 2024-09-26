@@ -1,7 +1,137 @@
 # Integration Example
 
+## Visual Example
 You can check an example of how to integrate Omnilane in your application by visiting the [Omnilane Dapp Example](https://showcase.omnilane.xyz/).
 
 Or by watching our showcase video:
 
 <video src='/omnilane-showcase.mov' playsInline autoPlay />
+
+## Code
+The following is pseudo code that shows how to integrate Omnilane in your application. This code is a simplified version of the integration process, and it may not work as is.
+
+### Get quotes
+```javascript
+const response = http.get(
+    BROKER_URL + "/quotes",
+    { 
+      params: {
+        fromChain: fromChain.chainId,
+        fromAsset: fromAsset.label, // Token ticker e.g USDT
+        toChain: toChain.chainId, 
+        toAsset: toAsset.label, // // Token ticker e.g USDT
+        amountIn: amountIn,
+      } 
+    }
+);
+```
+
+This will result in a response like the following
+
+```javascript
+const intent = {
+  "amountIn": "10000000",
+  "broadcastFee": "2213090",
+  "fromAsset": {
+    "id": "USDT",
+    "chainId": 31337,
+    "decimals": 6,
+    "contractAddress": "0xa7465d0d78d81bd8a51b47b2cdfc6bdff474db47",
+    "vaultContractAddress": "0x260bd0d51347ddc044bbe2dbc5dd69deae604c08"
+  },
+  "toAsset": {
+    "id": "USDT",
+    "chainId": 31337,
+    "decimals": 6,
+    "contractAddress": "0xa7465d0d78d81bd8a51b47b2cdfc6bdff474db47",
+    "vaultContractAddress": "0x260bd0d51347ddc044bbe2dbc5dd69deae604c08"
+  },
+  "witnessedCumulatives": [
+    {
+      "marketMaker": "0x1ca6947022d54f3a55bd465101e3bf7fc3dd0db3",
+      "witness": "10000000000"
+    },
+    {
+      "marketMaker": "0xab926fe0c90bb4a761feda2c93bb44f2517684e6",
+      "witness": "10000000000"
+    }
+  ],
+  "quotes": [
+    {
+      "amountOut": "10000000"
+    },
+    {
+      "amountOut": "10000000"
+    }
+  ]
+}
+```
+
+This has all the information required to now post an order to the vault on the origin chain.
+
+The quotes array, is the quote for the amountIn you provided, provided by the liquidity providers in the omnilane network. This may differ from the price in coinmarketcap.
+
+These work only as reference to know the current price at which assets are likely to be paid.
+
+Note that this is only a facility provided by Omnilane to facilitate the integration process. You can get all this information by yourself with onchain data.
+
+### Posting an order
+Before posting an order, you need to approve the vault contract to spend the amount of the asset you are swapping.
+
+After that, you can post an order to the vault contract on the origin chain.
+
+```javascript
+orderParams = {
+    ...intent,
+    partnerId: "0xab926fe0c90bb4a761feda2c93bb44f2517684e6", // If you joined the partner program, specify your ID to receive the partner fees
+    vendorId: "0x1ca6947022d54f3a55bd465101e3bf7fc3dd0db3", // The address where you will receive the fees
+    vendorFeeBps: 100, // The amount of vendor fees you want to charge
+    minAmountOut: median(intent.quotes) // this is only an example of how to calculate the minAmountOut
+}
+
+
+vaultContract = instantiateContract(originBlockchain.vaultContractAddress, VAULT_BUILD.abi);
+
+requestId = vaultContract.validateOrder(orderParams, intent.toAsset.contractAddress); // Obtain the request ID for the order
+
+tx = vaultContract.postOrder(orderParams, requestId, address, intent.toAsset.contractAddress); // post the order to the vault contract
+
+receipt = getTransactionReceipt(tx);
+newOrder = receipt.logs.find("NewOrder")
+
+orderId = newOrder.orderId;    
+```
+
+### Fetching the status of an order
+
+In order to know if a limit order has been picked by a liquidity provider, you can call the `get_order_status` view function in the core smart contract in NEAR.
+
+```javascript
+import NearApi from "near-api-js";
+
+NEAR_CONFIG = {
+    rpc: "https://rpc.testnet.near.org",
+    ...
+    ...
+}
+
+nearConnection = NearApi.connect(NEAR_CONFIG);
+
+contract = new Contract(CORE_NEAR_CONTRACT_ADDRESS, {
+    viewMethods: ["get_order_status"], 
+    changeMethods: [], 
+});
+
+result = contract.get_order_status({ order_id: byteArrayFromHexString(orderId) });
+
+if (result === 'Settled') {
+    success()
+}
+```
+
+To know if the funds have already been released, you can call the `get_order_status` view function in the core smart contract in NEAR.
+
+```javascript
+const destinationVaultContract = instantiateContract(destinationBlockchain.vaultContractAddress, ["function claimedOrders(bytes32) view returns (bool)"]);
+const isClaimed = destinationVaultContract.claimedOrders(orderId);
+```

@@ -1,5 +1,11 @@
 {
   "dapps": "Integrate in Your App",
   "market-makers": "Market Makers & LPs",
-  "fee-structure": "Fee Structure"
+  "fee-structure": "Fee Structure",
+  "support": {
+    "title": "Support ↗",
+    "type": "page",
+    "href": "https://t.me/+LDbLu5JuDAI0MjE0",
+    "newWindow": true
+  }
 }
