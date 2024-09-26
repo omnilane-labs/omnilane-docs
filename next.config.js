@@ -12,7 +12,7 @@ module.exports = {
       {
         source: '/',
         destination: '/introduction/what-is',
-        permanent:true
+        permanent: false
       },
     ]
   }
