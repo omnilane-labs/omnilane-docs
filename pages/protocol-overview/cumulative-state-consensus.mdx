@@ -1,0 +1,77 @@
+# Cumulative State Consensus
+
+**Omnilane** is a decentralized infrastructure focused on intent-based swaps and bridging tokens across any blockchain. Designed with simplicity and efficiency in mind, it allows wallets, DEXs, and dApps to integrate cross-chain functionality without relying on oracles, side-chains, or validators. This makes Omnilane faster and cheaper to use compared to traditional solutions, offering a straightforward way for projects to add cross-chain features and monetize their user base.
+
+### **Efficiency Without Oracles and Side-Chains**
+
+Omnilane's architecture eliminates external validators, oracles, and bridges, reducing both latency and costs. The absence of these intermediaries not only accelerates transaction finality but also ensures lower fees, making cross-chain swaps more accessible for all participants. Removing such dependencies also enhances the security of the network by reducing points of failure that could be exploited by malicious actors. Without third-party actors, Omnilane offers a predictable user experience, free from the complexities and uncertainties that often arise from multi-party consensus mechanisms. This predictable nature allows projects to offer their users consistent and reliable cross-chain transactions without the need for elaborate safeguards.
+
+The reduction in reliance on intermediaries directly translates to a more efficient use of resources, benefiting users by decreasing both operational overhead and transaction costs. In scenarios where quick finality is critical, Omnilane's design offers significant advantages by allowing transactions to complete without delays associated with waiting for oracle-based consensus. This independence from traditional consensus structures allows Omnilane to operate in a more resilient manner, unaffected by the typical issues that arise from external validation layers.
+
+### **Moving Away from the AMM Model**
+
+Unlike decentralized exchanges that rely on Automated Market Maker (AMM) models, Omnilane uses a peer-to-peer (P2P) limit order model, addressing several issues inherent in AMMs, including:
+
+* **Slippage**: Divergence between the expected and final prices due to liquidity constraints, which can lead to unfavorable trade outcomes for users.  
+* **Price Uncertainty**: The fluctuating nature of token prices between the initiation and execution of a transaction, especially in cross-chain environments, where price volatility is often exacerbated by time delays.  
+* **MEV and Sandwich Attacks**: Manipulation of transaction sequencing, allowing malicious actors to profit at the expense of regular users, thereby undermining the integrity of the decentralized exchange environment.
+
+The P2P limit order model that Omnilane implements allows users to specify exact trade terms, significantly reducing risks associated with slippage and price manipulation. By allowing participants to set precise conditions for their trades, Omnilane grants them greater control over the outcomes, making the trading experience more predictable and user-centric. This approach also aligns well with the intent-based transaction framework, which prioritizes the specific needs and expectations of individual users.
+
+### **Peer-to-Peer Limit Order Model**
+
+Omnilane involves two primary actors: users like **Alice**, who wish to swap tokens, and **Solvers**, who facilitate settlements. The **Cumulative State Consensus** algorithm enables secure, decentralized transactions without the need for oracles, ensuring that participants directly agree on swap terms. This model avoids centralized liquidity pools, which are often prone to manipulation, promoting a more equitable and transparent market environment.
+
+The P2P nature of Omnilane's model creates a dynamic interaction between Alice and the Solvers, where each participant operates autonomously to achieve mutually beneficial outcomes. This setup not only fosters a competitive environment among Solvers, thereby driving better pricing and efficiency, but also ensures that the liquidity for trades is distributed rather than concentrated, reducing systemic risk.
+
+Omnilane’s peer-to-peer model is particularly advantageous in situations where liquidity is scarce or unevenly distributed across chains. By leveraging direct agreements between users and Solvers, Omnilane can facilitate cross-chain swaps even when traditional liquidity pools would fail to provide sufficient capital. This capability greatly expands the range of potential use cases, including niche token swaps that are often underserved by conventional decentralized exchanges.
+
+### **Cumulative State Consensus: Simplified Cross-Chain Swaps**
+
+The **Cumulative State Consensus** is Omnilane's proprietary algorithm for executing secure, atomic swaps across multiple blockchains. Each party involved acts as its own verifier, thereby eliminating the need for third-party intermediaries. This decentralized verification model ensures that any malicious behavior—such as providing false data—only impacts the originator, thereby preserving the overall integrity of the transaction.
+
+By compressing all the necessary information for a swap into a single action, Omnilane significantly reduces the complexity and number of interactions required for a successful cross-chain transaction. This makes the entire process more reliable and user-friendly. The reduction in steps also minimizes the attack surface for potential exploits, making the swap process inherently more secure.
+
+This consensus mechanism effectively removes the need for repeated verification steps that are common in traditional swap methods. By simplifying the transaction flow, Omnilane not only enhances efficiency but also makes the user experience more seamless. Users can initiate swaps with confidence, knowing that their transactions are handled through a secure, straightforward protocol that minimizes both risk and cost.
+
+### **Traditional Escrow vs. Omnilane's Approach**
+
+To illustrate Omnilane's efficiency, consider the traditional escrow process compared to Omnilane's streamlined approach:
+
+**Traditional Escrow Process** involves numerous steps, adding time, complexity, and costs. Each step introduces potential delays and opportunities for disputes, increasing the overall friction of the transaction process.
+
+1. Alice and Bob agree on a trade.  
+2. Either Alice or Bob opens an escrow account.  
+3. Alice deposits her tokens.  
+4. Bob deposits his tokens.  
+5. Alice signs to confirm Bob’s deposit.  
+6. Bob signs to confirm Alice’s deposit.  
+7. Once both parties agree on the deposits, a transaction is sent to the smart contract to release funds to one another.
+
+**Omnilane's Streamlined Process** compresses all interactions into a single deposit transaction. When Alice initiates the swap, she includes information regarding previous deposits of Bob that will be used to fill on her trade. The remaining steps are managed automatically, similar to the experience users have with Uniswap. This approach not only saves time but also reduces the cognitive burden on users, ensuring secure escrow with minimal complexity. The **Core** smart contract on NEAR plays a vital role in this process by tracking user liabilities to validate solvency before executing swaps, thus maintaining accountability.
+
+The reduction in procedural complexity also means that users face fewer points of failure during a transaction. By consolidating what would typically be multiple discrete actions into a single interaction, Omnilane mitigates the risks of user error and network issues, leading to a more robust and reliable swapping experience. This simplicity is particularly beneficial for new users, who may find traditional escrow processes intimidating or overly complex.
+
+### **Ensuring Solvency**
+
+The escrow contract within Omnilane maintains a ledger of all user liabilities. This is because all actions such as withdrawing tokens, trading, etc happen through the **Core** and are triggered by Chain Signatures. The **Core** contract on NEAR is responsible for ensuring solvency through the following calculation:
+
+**Solvency \= Cumulative Deposits \- Cumulative Liabilities**
+
+This solvency check guarantees that there are sufficient assets on the destination chain to support the swap, eliminating the risk of insolvency or failed transactions and enhancing user confidence. Ensuring solvency is a critical aspect of maintaining trust within the network, as it provides a transparent and verifiable means for all parties to assess the risk involved in any given swap.
+
+By maintaining a real-time ledger of liabilities and requiring solvency checks before executing trades, Omnilane ensures that all participants are protected from potential defaults. This transparent approach to asset management helps foster a sense of security among users, which is essential for encouraging greater adoption of cross-chain swap technology. The simplicity of the solvency check also aids in rapid transaction validation, contributing to the overall efficiency of the protocol.
+
+### **The Consensus Mechanism**
+
+The *consensus* in **Cumulative State Consensus** arises when Solvers consent the cumulative deposits reported by Alice before picking and settling an order. If the data provided by Alice—such as her report on available cumulative deposits—appears incorrect or outdated, Solvers have the option to ignore her trade. If they consent to the provided data, they invoke the NEAR smart contract to finalize the swap, thereby releasing funds across both chains to the final recipients. This mechanism not only aligns participants on the state of the trade before execution but also reduces the likelihood of disputes by ensuring all parties have validated the terms in advance.
+
+This consensus mechanism also acts as a deterrent to malicious behavior. Since Solvers can opt out of trades with suspicious or inaccurate data, users are incentivized to provide correct information to facilitate successful transactions. This distributed trust model removes the need for a centralized authority, aligning Omnilane with the core principles of decentralization and fostering a cooperative trading environment.
+
+The ability for Solvers to verify and consent to trade data before committing to a swap ensures that only legitimate transactions are processed. This added layer of scrutiny helps maintain the integrity of the system while distributing responsibility across all participants, further enhancing the resilience and trustworthiness of the network.
+
+### 
+
+### **Conclusion**
+
+Omnilane offers a practical and efficient solution for cross-chain token swaps, focusing on minimizing dependencies and optimizing the user experience. By eliminating oracles, side-chains, and AMMs, Omnilane delivers a faster and more cost-effective approach to decentralized swaps. The **Cumulative State Consensus** algorithm ensures secure, atomic transactions without the overhead of excessive interactions, making Omnilane an appealing choice for projects integrating cross-chain capabilities. Additionally, its emphasis on user-centric design and reducing procedural complexity lowers the barriers to entry, thereby enabling a broader range of projects and users to participate in decentralized finance. As blockchain ecosystems continue to evolve, Omnilane's innovative approach positions it as a key enabler for seamless, secure, and scalable cross-chain interactions.
