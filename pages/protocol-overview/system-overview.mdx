@@ -1,7 +1,15 @@
 # Protocol Overview
 
-Omnilane is an [intent-based](https://blog.uniswap.org/uniswap-labs-and-across-propose-standard-for-cross-chain-intents) decentralized cross-chain swap protocol that enables the seamless exchange of native digital assets across multiple blockchain networks.
-Below, an overview of how Omnilane works and the different components that make it possible.
+Omnilane is a decentralized, [intent-based](https://blog.uniswap.org/uniswap-labs-and-across-propose-standard-for-cross-chain-intents) liquidity protocol designed to facilitate seamless interactions across multiple blockchains. By abstracting away the complexity of cross-chain swaps and liquidity management, Omnilane enables fast, secure, and scalable asset transfers. The protocol operates through three key layers:
+
+Protocol Smart Contracts on Each Chain
+These smart contracts are deployed across multiple blockchains to facilitate deposits, execute swaps, and manage orders without intermediaries.
+
+Network of Solvers
+A decentralized network of solvers competes to fulfill cross-chain operations, executing actions for a fee and ensuring liquidity across chains.
+
+Integration with dApps
+Omnilane integrates seamlessly with decentralized applications (dApps) and wallets, allowing them to tap into omnichain liquidity without needing to manage infrastructure or liquidity pools themselves.
 
 ## System Overview
 
@@ -11,19 +19,16 @@ Omnilane leverages [Chain Signatures](https://docs.near.org/build/chain-abstract
 
 **NEAR as Ledger Layer**
 
-Omnilane ledger smart-contracts live on the NEAR blockchain, using it as its settlement layer for its fast blocktime, its efficiency in transaction costs and scalable infrastructure to process transactions. NEAR's sharding technology enables high throughput and low latency, making it ideal for handling the demands of cross-chain swaps.
-The main protocol's smart contracts are deployed on NEAR, where we execute the logic for executing swaps, handling fees, and ensuring that transactions are completed as intended.
+The backbone of Omnilane is its ledger smart contracts, which reside on the NEAR blockchain. NEAR serves as the settlement layer due to its fast block times, efficient transaction costs, and scalable sharding infrastructure. This makes NEAR ideal for managing high-throughput and low-latency transactions. The core logic for swaps, fee handling, and transaction finality is executed here. 
 
-This doesn't necessarily mean users need to interact with NEAR. Transactions are sponsored by Omnilane as the default relayer, allowing for a seamless experience.
+Importantly, users do not need to directly interact with NEAR, as Omnilane sponsors transactions as the default relayer, providing a smooth, user-friendly experience.
 
 **Intent-Based Limit Orders**
 
-Omnilane only needs to deploy a smart-contract on new blockchains to integrate. These smart-contracts will accept deposits to create new swap orders from users. 
+Omnilane only needs to deploy smart contracts on new blockchains to integrate them into the system. These contracts allow users to deposit assets and create new swap orders. 
 
-Along with the deposit, users provide _**witness of counterparty cumulative liquidity**_, which later works as proof to settle the trade without requiring any further action from the user.
+When creating an order, users also provide proof of cumulative liquidity from a counterpart, which serves as a witness to settle the trade without any additional actions required from the user.
 
 **Cumulative State Consensus**
 
-The Cumulative State Consensus, is a peer-to-peer consensus of the cumulative deposits made by a trade counterparty. This is provided by users creating new orders along with their deposit. Because all liabilities are tracked on the Ledger Layer, having the acknowledgment from the user of the cumulative liquidity deposited by their chosen counterparties allows for the NEAR smart-contracts to determine whether the trade can take place or not (if the counterparty is solvent for settling the trade securely.)
-
-Please note that this makes it possible for Omnilane to operate without oracles, sidechains, or bridges, allowing us to scale quickly.
+The Cumulative State Consensus mechanism underpins Omnilane’s secure and efficient cross-chain swaps. This peer-to-peer consensus model tracks the cumulative deposits made by counterparties in a trade. Users provide acknowledgment of their counterparties' cumulative liquidity, allowing NEAR smart contracts to determine whether a trade can proceed based on solvency. Since Omnilane tracks all liabilities on the NEAR ledger layer, it can operate without the need for oracles, sidechains, or bridges, ensuring both scalability and security.
