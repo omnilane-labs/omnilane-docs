@@ -1,0 +1,160 @@
+# Vaults
+
+*Vaults* are smart contracts deployed on each blockchain supported by Omnilane. The system can even support blockchains that don't have native smart contract functionality, such as Bitcoin. *Vaults* are used to accept token deposits from liquidity providers and process new limit orders from users wanting to swap tokens. They also handle withdrawals for liquidity providers and allow users to claim tokens after a swap, but this process requires a signature verification from the central *Core* contract.
+
+Below some of the methods that the ***Vaults*** smart contracts expose
+
+## Add Liquidity
+
+For users to be able to trade in Omnilane, it is required for the market makers to deposit liquidity into the receiving vault of each blockchain.
+
+In NEAR Blockchain Market makers add liquidity to the vault by calling the `ft_transfer_call` function on the FT contract ([NEP-141](https://nomicon.io/Standards/Tokens/FungibleToken/Core#nep-141)), specifying the vault account ID as the receiver, the amount to transfer, and a message indicating the operation to perform and the market maker this transfer will be deposited to:
+
+```json
+"msg": "AddLiquidity" {
+    "market_maker": String,
+}
+```
+
+- This operation is implemented as a “Token Receiver” in the vault. In case of any failure, the token will be refunded.
+- Depositing native NEAR as liquidity is not supported. This deposit can be routed through `wrap.near` contract to convert NEAR into wNEAR and operate as a regular FT.
+- The market maker ID needs to be a valid non-zero Ethereum address.
+
+The deposit will be added to the market maker vault, updating the available balance for the user.
+
+The available balance for any specific market maker can be retrieved by calling the method:
+
+```rust
+pub fn get_market_maker_available_balance(
+        &self,
+        market_maker: String,
+        token: AccountId,
+    ) -> u128
+```
+
+## Post Orders
+
+A trade on Omnilane Protocol starts by depositing on the origin chain. 
+
+In NEAR Blockchain users post orders to the vault by calling the `ft_transfer_call` function on the FT contract ([NEP-141](https://nomicon.io/Standards/Tokens/FungibleToken/Core#nep-141)), specifying the vault account ID as the receiver, the amount to transfer, and a message indicating the operation to perform, the order params, and the account that will hold ownership if this deposit:
+
+```rust
+fn ft_transfer_call(
+    &mut self,
+    receiver_id: AccountId,
+    amount: U128, (String)
+    memo: Option<String>,
+    msg: String,
+) -> PromiseOrValue<U128>
+```
+
+```json
+	"msg": {
+		"PostOrder" {
+        "order_params": OrderParams,
+        "request_id": RequestId,
+        "from": AccountId,
+    },
+  }
+```
+
+- `from` is the account that holds control of the pending order, and the one receiving the funds in case of a cancellation or refund.
+
+When an order is created, it will be initialized in a LOCKED state, and the received funds of this order will be only locked inside the order, it is not stored in any vault or mapping for accounting. To retrieve the funds, it needs to be WITHDRAWN to refund them to the user, or UNLOCKED for it to be delivered to the order counterpart.
+
+Validations:
+
+Unlike the EVM implementation, this contract will fully validate the Request ID when posting the order, validating in the process that Market makers’ and affiliates’ Ids are valid Ethereum addresses.
+
+A valid order can be obtained from a [Broker](https://www.notion.so/Broker-dbd5d9d8ca4d406fb3e120813401a600?pvs=21).
+
+`from_asset.decimals` is not validated, as getting data from the ft contract requires an asynchronous call, so this should be verified by the Core contract.
+
+### OrderParams
+
+```rust
+pub struct Asset {
+    pub chain_id: u32,
+    pub decimals: u32,
+    /// The address of the token contract, as a lowercase hex string.
+    /// Native tokens are represented by the zero address (”0x0” for strings)
+    pub contract_address: String,
+    pub vault_contract_address: String,
+}
+
+pub struct Witness {
+    /// The market makers's identity as an EVM address (lowercase hex).
+    pub market_maker: String,
+    pub witness: String,
+}
+
+pub struct OrderParams {
+    /// The amount of tokens that will be transferred to this contract.
+    pub amount_in: InputAmount,
+    /// The minimum amount the user expects to receive in the destination chain.
+    /// This value serves a limit order, where maker makers can fill the order with an amount only greater or equal to this value
+    pub min_amount_out: OutputAmount,
+    /// The fee, in receiving token units,
+    /// the user is willing to pay to a relayer for the transaction
+    /// broadcast in the destination chain.
+    /// It should be enough to cover gas costs and any other risks.
+    /// It will be deducted from the amount received in destination chain.
+    pub broadcast_fee: OutputAmount,
+    pub from_asset: Asset,
+    pub to_asset: Asset,
+    /// The address of the receiver contract in the destination chain.
+    /// Represented as a string, as it can have any format
+    pub to_address: String,
+    pub witnessed_cumulatives: Vec<Witness>,
+    /// The identity of the partner (as an EVM address).
+    /// When this is a non-zero address, the protocol fee will be shared with
+    /// this partner according to the fee configuration in Omnilane Core.
+    /// Only whitelisted partners are allowed (or zero address).
+    pub partner_id: String,
+    /// The ID of the vendor related to this order, as an EVM address.
+    pub vendor_id: String,
+    /// The base percentage points the affiliate will receive (e.g. 5 = 0.05%)
+    pub vendor_fee_bps: u32,
+    /// The address of the exclusive filler, if any (zero address if not exclusive).
+    pub exclusive_filler: String,
+    /// The duration of the exclusivity in seconds.
+    pub exclusivity_duration_secs: u64,
+    /// The message (as bytes) to sent to the receiver contract in the destinations chain,
+    ///  if empty, no contract call will be made
+    pub message: Vec<u8>,
+}
+```
+
+### OrderId
+
+The `orderId` is the unique identifier of this order across the protocol and is calculated as follows:
+
+```solidity
+sha256(abi.encode(requestId, timestamp, fromAddress))
+```
+
+Note that `requestId` is not enforced to be unique, the same `requestId` posted twice will have a different timestamp, resulting in two unique `OrderId`
+
+## Contract Calls on Destination
+
+Omnilane allows the execution of contract calls when receiving a token in a destination chain. This feature works by providing a `message` in the original order, posted by the user.
+
+```rust
+struct OrderParams {
+    /*
+    */
+    bytes message;
+}
+```
+
+If the message is not empty, upon claiming the funds, the Omnilane vault will assume that the receiver is a contract and that it implements NEAR’s FT `FungibleTokenReceiver` interface.
+
+The vault will make a cross-contract call to the `ft_transfer_call` in the FT Token account. Transferring the claimed amount and attaching the message as the `msg` field, parsing it as a string from utf8 bytes.
+
+The receiver of the `ft_transfer_call` will then be able to handle the token received as usual (given the message has the correct format).
+
+For more information on NEAR FT Tokens see [Fungible Tokens](https://docs.near.org/build/primitives/ft#handling-deposits-contract-only).
+
+The receiver contract should consume all tokens or fail, a partial refund is not supported, and the vault will consider all funds to have been transferred.
+
+Users will need to provide enough `broadcastFee` in order for relayers to inject the necessary gas to complete the call on destination.

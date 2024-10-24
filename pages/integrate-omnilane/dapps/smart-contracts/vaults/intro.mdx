@@ -1,0 +1,7 @@
+# Vaults
+
+Vaults are smart contracts (or addresses) deployed on each blockchain supported by Omnilane. The system can even support blockchains that don't have native smart contract functionality, such as Bitcoin. Vaults are used to accept token deposits from liquidity providers and process new limit orders from users wanting to swap tokens. They also handle withdrawals for liquidity providers and allow users to claim tokens after a swap, but this process requires a signature verification from the central Core contract.
+
+As an integrator, your applications will require interacting with the Vaults for depositing funds to create new orders and for cancelling orders.
+
+You can opt not to interact with the Vaults to release funds on the destination chain by using the Relayer service. However, if your integration requires more control, you can interact with the Vaults directly. Find more information on the Vaults page.

@@ -1,8 +1,6 @@
 # Vaults
 
-*Vaults* are smart contracts deployed on each blockchain supported by Omnilane. The system can even support blockchains that don't have native smart contract functionality, such as Bitcoin. *Vaults* are used to accept token deposits from liquidity providers and process new limit orders from users wanting to swap tokens. They also handle withdrawals for liquidity providers and allow users to claim tokens after a swap, but this process requires a signature verification from the central *Core* contract.
-
-Below some of the methods that the ***Vaults*** smart contracts expose
+The following are the endpoints of EVM smart-contracts. Addresses can be found [here](/integrate-omnilane/dapps/smart-contracts/addresses).
 
 ## Add Liquidity
 
@@ -20,7 +18,7 @@ function addLiquidity(
 
 The deposit will be added to the LP vault, and will increase its `cumulative` deposit value.
 
-The `cumulative` value is the all-time cumulative amount deposited for this LP and token address. It is later used by the user to provide a `witness` of this value, fueling the Omnilane `Cumulative State Consensus` mechanism.
+The `cumulative` value is the all-time cumulative amount deposited for this LP and token address. It is later used by the user to provide a `witness` of this value, fueling the Omnilane `[**Cumulative State Consensus**](/protocol-overview/cumulative-state-consensus)` mechanism.
 
 The cumulative for a specific LP and token can be retrieved from the contract using the public getter function
 

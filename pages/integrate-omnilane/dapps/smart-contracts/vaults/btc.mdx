@@ -1,0 +1,89 @@
+# Bitcoin Vaults
+
+The Bitcoin blockchain has different mechanics in Omnilane compared to “blockchains with smart contracts”. The Utxo nature of Bitcoin and the limitation on programming require a different approach to achieve cross-chain swaps safely.
+
+In Bitcoin, Marker maker vaults are represented by a *derived address*. This address is derived from the Chain Signatures feature, using a specific path:
+
+`Market Maker Vault Address = MpcDerived(path)`
+
+where  `path = “omnilane-prefix” + chainID + market maker ID`
+
+Where the market ID is their EVM address as a lowercase hex string
+
+As being derived for the MPC service, only the Omnilane Core contract in Near has control over these addresses and can sign transactions to move funds.
+
+With this derived address the market maker can fund the address, creating as many Utxos as wanted:
+
+import Image from 'next/image';
+
+<Image
+  src="/bitcoin-image-1.png"
+  alt="Photo"
+  width={1125}
+  height={750}
+  priority
+  className="next-image"
+/>
+
+# Consensus and locking mechanism
+
+Unlike other chains that rely on the cumulative deposit to keep the system healthy and lock the funds, Bitcoin in Omnilane relies on Bitcoin’s original mechanics to prevent double-spending: the UTXOs.
+
+Users would post orders with a list of Utxos as the witnessed deposits, serving as proof from the user that the market maker has funded these Utxos and they have been mined in a Bitcoin block.
+
+Each Utxo is encoded as follows:
+
+`utxoBytes = [amount(u64):8 bytes] + [txid:32 bytes] + [vout(u32):4 bytes]`
+
+`encodedUtxo = base64(utxoBytes)`
+
+> Base64 encoding reduces the size by 33% as oposed to raw strings
+
+Then All the Utxos are included as comma-separated string lists in the order:
+
+```json
+"OrderParams" {
+		...
+    "witnessedCumulatives" : {
+	    "marketMaker": "0x.....",
+	    "witness": "20wAAAAAAACSVYAACZi0QAGqgLlZQkbJIzmPhEHWTvveRt6E0/EepQEAAAA=,6AMAAAAAAACM53qbxhEZhXjeG6tdDWyKBNkV9Xig/7OiHLV0du079QAAAAA=",
+    }
+}
+```
+
+## Settle Order - Locking
+
+Having these witnessed Utxos in the order when a market maker requests the settlement, the Omnilane Core will first discard all Utxos that have already been used in other orders. Then with the still valid Utxos, it will consume the Utxs needed to fill the amount of the order, and upon settlement, it will lock all the used Utxos for this order.
+
+
+Note that this allows the orders to be valid even if some of the Utxos have been consumed since the order was posted.  But Utxos will only be assigned to one settled order at a time, preventing double spending (also preventing withdrawal from market maker)
+
+<Image
+  src="/bitcoin-image-3.png"
+  alt="Photo"
+  width={1125}
+  height={750}
+  priority
+  className="next-image"
+/>
+
+# Execute the Order
+
+After the order is settled, a signature can be requested from the Omnilane Core to provide a signed transaction to execute the order in the Bitcoin Blockchain. This is done by providing the Near contract the current **Bitcoin Fee Rate** and requesting the signature for each of the inputs in the order. The Contract will handle the TX construction and will provide raw signatures through the *Chain Signatures* feature:
+
+<Image
+  src="/bitcoin-image-2.png"
+  alt="Photo"
+  width={1125}
+  height={750}
+  priority
+  className="next-image"
+/>
+
+The construction of the TX requires the contract to have the addresses for each of the receivers of the fees. This results in the following requirements:
+
+- The **Protocol Fee address** for Bitcoin will be stored and managed in the contract.
+- Each **partner** is required to have a Bitcoin address configured to collect the fees. If the partner does not have a valid Bitcoin address, the partner fee will be sent back to the protocol to not interrupt the user experience.
+- The **vendor ID** provided in the order should be a valid Bitcoin address that will receive the vendor fee. If there is no address provided or it is not valid, the vendor fee will be sent to the receiver user.
+
+SegWit signatures will ensure that the provided amounts in Utxos are not fake, because any wrong amount will render the whole transaction signature invalid.
