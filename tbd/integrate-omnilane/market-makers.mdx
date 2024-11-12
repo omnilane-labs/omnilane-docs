@@ -1,0 +1,27 @@
+# Getting Started
+
+## Market Makers
+
+Market makers play a critical role in providing liquidity and ensuring efficient trades on Omnilane. Currently, market makers are permissioned, and interested parties must contact us to join the program. If you're interested in becoming a market maker, please [reach out to us](mailto:franco@omnilane.xyz).
+
+### Market Maker Flow
+
+#### Add Liquidity
+Provide liquidity on the tokens and chains you would like to trade. This can be easily done through our LP dashboard.
+
+#### Monitor New Orders
+Omnilane provides a WebSocket that streams new orders across all subscribed chains and pairs. You can request information about past trades by making additional API calls. 
+
+Please note that this is only a data aggregator facility that Omnilane provides for easier integration, but all the information can be found on-chain permissionless.
+
+#### Provide Quotes
+You will be asked to provide a reference price for users that are looking to trade. For example, if you are subscribed to the pair eth-USDT / bnb-USDC you may receive requests for quoting a trade on that pair.
+
+#### Fill In Orders
+When a new order trade is appealing, you will need to provide a signature as witness that the user deposit on the origin chain and call the NEAR smart-contract to pick the trade. The trade will be settled automatically after a few seconds, allowing marketmakers to compete fairly on price and not only on speed.
+
+In practice, market makers don't need to interact directly with the NEAR blockchain as Omnilane provides a relayer for marketmakers that don't want to handle the hassle of maintaining paymaster accounts, and dealing with on-chain difficulties.
+
+### Contact and Onboarding
+
+To join Omnilane as a market maker, please contact us [franco@omnilane.xyz](mailto:franco@omnilane.xyz) to start the onboarding process. Our team will guide you through the necessary steps and provide access to the required systems and documentation.

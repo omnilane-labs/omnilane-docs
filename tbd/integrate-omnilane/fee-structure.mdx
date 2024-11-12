@@ -1,0 +1,37 @@
+# Fee Structure
+
+Below the list of fees involved in Omnilane
+
+- **Maker Fee:** (Set in the smart-contracts by Omnilane) 
+        - When positive: Makers are charged a fee, taken in the inbound tokens they are receiving. This fee is directed to the Omnilane treasury and is deducted when they claim their funds after an order is completed 
+        - When negative: Takers are charged a fee, taken in outbound tokens. This fee is paid to the maker and deducted when the taker releases the outbound tokens on the destination chain. This setup encourages liquidity provision and allows Omnilane to incentivize makers with lower fees or rewards.
+- **Broadcast Fee:** This is a fee paid to relayers to incentivize them to process the transactions on the destination chain. The fee is a fixed amount, often 3 times the cost of the transaction, and it is charged in outbound tokens. This fee is deducted from the user when releasing the funds and the amount is determined through bidding between relayers.
+
+- **Vendor Fee:** This fee is defined by any decentralized app (dApp) integrating Omnilane and is paid by the user in outbound tokens. It’s deducted when the funds are released from the user. The fee compensates the vendor for their integration and offering Omnilane’s services on their platform.
+
+- **Protocol Fee:** A percentage charged to the user in outbound tokens, directed to the Omnilane treasury, and deducted when releasing the funds. This serves as Omnilane’s revenue for providing the infrastructure and services that enable the cross-chain swap.
+
+- **Partner Fee:** This is a subset of the protocol fee. Vendors that join the Omnilane partner program receive a percentage of the protocol fee as an extra incentive for promoting and integrating Omnilane's service. The partner fee encourages third-party dApps to partner with Omnilane to boost adoption.
+
+
+## Fee Schematics
+import Image from 'next/image';
+
+<Image
+  src="/fee-structure.png"
+  alt="Photo"
+  width={1125}
+  height={750}
+  priority
+  className="next-image"
+/>
+
+## Initial Values
+
+| **Fee**                     | **Value** |
+|-----------------------------|-----------|
+| **Maker Fee**               | -10 BPS    |
+| **Protocol Fee**            | 20 BPS |
+| **Broadcast Fee**           | Depends on gas price and blockchain |
+| **Vendor Fee**              | Defined by each vendors |
+| **Partner Fee**             | Up to 50%  |
